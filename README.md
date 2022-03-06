@@ -8,4 +8,7 @@ roslaunch urbant_simulation start.launch gpu:=false gazebo_gui:=true gps_switch:
 roslaunch hdl_localization hdl_localization.launch
 
 
-add /globalmap in rviz
+roscd hdl_localization/rviz
+
+
+rviz -d hdl_localization.rviz
