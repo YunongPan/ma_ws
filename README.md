@@ -12,3 +12,12 @@ roscd hdl_localization/rviz
 
 
 rviz -d hdl_localization.rviz
+
+
+rosrun hdl_map_update map_update_server
+
+
+rosrun hdl_map_update map_update_caller
+
+
+rosrun teleop_twist_keyboard teleop_twist_keyboard.py
