@@ -165,13 +165,13 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(map_update_caller src/map_update_caller.cpp)
-target_link_libraries(map_update_caller ${catkin_LIBRARIES})
-add_dependencies(map_update_caller ${PROJECT_NAME}_gencpp)
+add_executable(map_update src/map_update.cpp)
+target_link_libraries(map_update ${catkin_LIBRARIES})
+add_dependencies(map_update ${PROJECT_NAME}_gencpp)
 
-add_executable(map_update_server src/map_update_server.cpp)
-target_link_libraries(map_update_server ${catkin_LIBRARIES})
-add_dependencies(map_update_server ${PROJECT_NAME}_gencpp)
+add_executable(map_update_dev src/map_update_dev.cpp)
+target_link_libraries(map_update_dev ${catkin_LIBRARIES})
+add_dependencies(map_update_dev ${PROJECT_NAME}_gencpp)
 
 #############
 ## Install ##

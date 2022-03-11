@@ -24,7 +24,7 @@ pcl::Registration<pcl::PointXYZI, pcl::PointXYZI>::Ptr select_registration_metho
 
   // select a registration method (ICP, GICP, NDT)
   std::string registration_method = pnh.param<std::string>("registration_method", "NDT_OMP");
-  if(registration_method == "FAST_GICP") {
+  if(registration_method == "FAST_GICP") { //////////////////////////////////////////////////////////////////////////////////////////////////////////
     std::cout << "registration: FAST_GICP" << std::endl;
     fast_gicp::FastGICP<PointT, PointT>::Ptr gicp(new fast_gicp::FastGICP<PointT, PointT>());
     gicp->setNumThreads(pnh.param<int>("reg_num_threads", 0));
@@ -35,7 +35,7 @@ pcl::Registration<pcl::PointXYZI, pcl::PointXYZI>::Ptr select_registration_metho
     return gicp;
   }
 #ifdef USE_VGICP_CUDA
-  else if(registration_method == "FAST_VGICP_CUDA") {
+  else if(registration_method == "FAST_VGICP_CUDA") { //////////////////////////////////////////////////////////////////////////////////////////////////////////
     std::cout << "registration: FAST_VGICP_CUDA" << std::endl;
     fast_gicp::FastVGICPCuda<PointT, PointT>::Ptr vgicp(new fast_gicp::FastVGICPCuda<PointT, PointT>());
     vgicp->setResolution(pnh.param<double>("reg_resolution", 1.0));
@@ -45,7 +45,7 @@ pcl::Registration<pcl::PointXYZI, pcl::PointXYZI>::Ptr select_registration_metho
     return vgicp;
   }
 #endif
-  else if(registration_method == "FAST_VGICP") {
+  else if(registration_method == "FAST_VGICP") { //////////////////////////////////////////////////////////////////////////////////////////////////////////
     std::cout << "registration: FAST_VGICP" << std::endl;
     fast_gicp::FastVGICP<PointT, PointT>::Ptr vgicp(new fast_gicp::FastVGICP<PointT, PointT>());
     vgicp->setNumThreads(pnh.param<int>("reg_num_threads", 0));
@@ -54,7 +54,8 @@ pcl::Registration<pcl::PointXYZI, pcl::PointXYZI>::Ptr select_registration_metho
     vgicp->setMaximumIterations(pnh.param<int>("reg_maximum_iterations", 64));
     vgicp->setCorrespondenceRandomness(pnh.param<int>("reg_correspondence_randomness", 20));
     return vgicp;
-  } else if(registration_method == "ICP") {
+  } 
+  else if(registration_method == "ICP") { //////////////////////////////////////////////////////////////////////////////////////////////////////////
     std::cout << "registration: ICP" << std::endl;
     pcl::IterativeClosestPoint<PointT, PointT>::Ptr icp(new pcl::IterativeClosestPoint<PointT, PointT>());
     icp->setTransformationEpsilon(pnh.param<double>("reg_transformation_epsilon", 0.01));
@@ -62,7 +63,8 @@ pcl::Registration<pcl::PointXYZI, pcl::PointXYZI>::Ptr select_registration_metho
     icp->setMaxCorrespondenceDistance(pnh.param<double>("reg_max_correspondence_distance", 2.5));
     icp->setUseReciprocalCorrespondences(pnh.param<bool>("reg_use_reciprocal_correspondences", false));
     return icp;
-  } else if(registration_method.find("GICP") != std::string::npos) {
+  } 
+  else if(registration_method.find("GICP") != std::string::npos) { //////////////////////////////////////////////////////////////////////////////////////////////////////////
     if(registration_method.find("OMP") == std::string::npos) {
       std::cout << "registration: GICP" << std::endl;
       pcl::GeneralizedIterativeClosestPoint<PointT, PointT>::Ptr gicp(new pcl::GeneralizedIterativeClosestPoint<PointT, PointT>());
@@ -84,7 +86,8 @@ pcl::Registration<pcl::PointXYZI, pcl::PointXYZI>::Ptr select_registration_metho
       gicp->setMaximumOptimizerIterations(pnh.param<int>("reg_max_optimizer_iterations", 20));
       return gicp;
     }
-  } else {
+  } 
+  else {  //////////////////////////////////////////////////////////////////////////////////////////////////////////
     if(registration_method.find("NDT") == std::string::npos) {
       std::cerr << "warning: unknown registration type(" << registration_method << ")" << std::endl;
       std::cerr << "       : use NDT" << std::endl;
