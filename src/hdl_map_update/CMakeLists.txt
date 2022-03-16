@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   pcl_ros
   sensor_msgs
+  tf
 )
 
 find_package(PCL 1.7 REQUIRED)

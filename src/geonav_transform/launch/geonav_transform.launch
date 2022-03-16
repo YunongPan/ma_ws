@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- For setting debug level to debug -->
+  <env name="ROSCONSOLE_CONFIG_FILE" 
+       value="$(find geonav_transform)/config/custom_rosconsole.conf"/>
+
+  <node pkg="geonav_transform" type="geonav_transform_node" name="geonav_transform_node" clear_params="true" output="screen">
+    <!-- Datum as latitude, longitude [decimal deg.], yaw [ENU, degrees] -->
+    <param name="odom_frame_id" value="map_gps" />
+    <param name="base_link_frame_id" value="base_link_gps" />
+    <param name="broadcast_odom2base_transform" value="true" />
+    <param name="zero_altitude" value="true" />
+    <!--set to the original lla as melaten map origin-->
+    <rosparam param="datum">[50.7871051, 6.046473, 265.117]</rosparam>
+    <!--set to the simulation lla -->
+    <rosparam param="datum">[50.780578, 6.104401, 156]</rosparam>
+  </node>
+
+  <node pkg="tf" type="static_transform_publisher" name="map_2_map_gps" args="0 0 0 0 0 0 map map_gps 10" />
+
+  <!-- offset for wrong lla -->
+  <!-- 
+  <node pkg="navgraph" type="navgraph_map_reorientation" name="navgraph_map_reorientation" output="screen" />
+  <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard" output="screen" launch-prefix="xterm -e" >
+    <remap from="cmd_vel" to="cmd_vel_map" />
+  </node>
+  -->
+
+</launch>

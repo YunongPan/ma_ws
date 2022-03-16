@@ -11,10 +11,15 @@
 #include <pcl_ros/point_cloud.h>
 #include <sensor_msgs/PointCloud2.h>
 
+#include <tf/transform_listener.h>
+
 int chunk00_x_min_bound;
 int chunk00_y_min_bound;
 int chunk_index_1_previous = -1;
 int chunk_index_2_previous = -1;
+
+std::string pcd_folder_path = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/";
+std::string pcd_same_part = "map_1124_ascii_";
 
 using PointT = pcl::PointXYZI;
 
@@ -78,11 +83,11 @@ std::string readTxt(std::string file) // Read line 11 of the random pcd file, wh
 
 
 //-----------------------------------------------------------------------------------
-class SubscribeAndPublish
+class ListenAndPublish
 {
 
 public:
-  SubscribeAndPublish()
+  ListenAndPublish()
   {
 //    ros::service::waitForService("/update_map"); ////////////////////////
 //    update_client = n.serviceClient<hdl_map_update::Chunk_index>("/update_map"); ////////////////////////
@@ -90,98 +95,223 @@ public:
 
 
     globalmap_pub = n.advertise<sensor_msgs::PointCloud2>("/globalmap", 5, true);
-    location_sub = n.subscribe("/base/odom", 10, &SubscribeAndPublish::locationCallback, this);    
+///    location_sub = n.subscribe("/base/odom", 10, &SubscribeAndPublish::locationCallback, this);    
+    
+  
+    tf::TransformListener listener;
 
-  }
+    ros::Rate rate(10.0);
+    while (n.ok()){ 
+      tf::StampedTransform transform;
+      try{
+        listener.lookupTransform("/map", "/base_link", ros::Time(0), transform);
+      }
+      catch (tf::TransformException &ex) {
+        ROS_ERROR("%s",ex.what());
+        ros::Duration(1.0).sleep();
+        continue;
+      }
+
+      float robot_location_x = transform.getOrigin().x(); 
+      float robot_location_y = transform.getOrigin().y(); 
 
 
-  void locationCallback(const nav_msgs::Odometry::ConstPtr& msg)
-  {
-
-    float robot_location_x = msg->pose.pose.position.x - 29; 
-    float robot_location_y = msg->pose.pose.position.y + 45; 
-    // It is currently assumed that the robot is powered on at MAP zero. In the map, the position of the robot is 0, 0. But in the Odom coordinate system it is 29, -45. After changing to base_link as the basis, delete this step. 
+      int chunk_index_2 = (robot_location_x - chunk00_x_min_bound)/30;
+      int chunk_index_1 = (chunk00_y_min_bound - robot_location_y)/30 + 1; // Calculate the Label of the submap where the robot is currently located.
 
 
 
-    int chunk_index_2 = (robot_location_x - chunk00_x_min_bound)/30;
-    int chunk_index_1 = (chunk00_y_min_bound - robot_location_y)/30 + 1; // Calculate the Label of the submap where the robot is currently located. 
-
-
-
-
-    if (chunk_index_1 != chunk_index_1_previous || chunk_index_2 != chunk_index_2_previous){
-      chunk_index_1_previous = chunk_index_1;
-      chunk_index_2_previous = chunk_index_2;
 
 
 //-----------------------------------------------------------------------------------
-      int i = chunk_index_1;
-      int j = chunk_index_2;
+      if (chunk_index_1 != chunk_index_1_previous || chunk_index_2 != chunk_index_2_previous){ // i oder j ungleich
+        int i = chunk_index_1;
+        int j = chunk_index_2;
 
-      std::string pcd_file_0_0 = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/map_1124_ascii_" + std::to_string(i) + "_" + std::to_string(j) + ".pcd";
-      std::string pcd_file_1_0 = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/map_1124_ascii_" + std::to_string(i + 1) + "_" + std::to_string(j) + ".pcd";
-      std::string pcd_file_n1_0 = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/map_1124_ascii_" + std::to_string(i - 1) + "_" + std::to_string(j) + ".pcd";
-      std::string pcd_file_0_1 = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/map_1124_ascii_" + std::to_string(i) + "_" + std::to_string(j + 1) + ".pcd";
-      std::string pcd_file_1_1 = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/map_1124_ascii_" + std::to_string(i + 1) + "_" + std::to_string(j + 1) + ".pcd";
-      std::string pcd_file_n1_1 = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/map_1124_ascii_" + std::to_string(i - 1) + "_" + std::to_string(j + 1) + ".pcd";
-      std::string pcd_file_0_n1 = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/map_1124_ascii_" + std::to_string(i) + "_" + std::to_string(j - 1) + ".pcd";
-      std::string pcd_file_1_n1 = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/map_1124_ascii_" + std::to_string(i + 1) + "_" + std::to_string(j - 1) + ".pcd";
-      std::string pcd_file_n1_n1 = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/map_1124_ascii_" + std::to_string(i - 1) + "_" + std::to_string(j - 1) + ".pcd";
-
-      globalmap_0_0.reset(new pcl::PointCloud<PointT>());
-      pcl::io::loadPCDFile(pcd_file_0_0, *globalmap_0_0);
-      globalmap_0_0->header.frame_id = "map";
-
-      globalmap_1_0.reset(new pcl::PointCloud<PointT>());
-      pcl::io::loadPCDFile(pcd_file_1_0, *globalmap_1_0);
-      globalmap_1_0->header.frame_id = "map";
-
-      globalmap_n1_0.reset(new pcl::PointCloud<PointT>());
-      pcl::io::loadPCDFile(pcd_file_n1_0, *globalmap_n1_0);
-      globalmap_n1_0->header.frame_id = "map";
-
-      globalmap_0_1.reset(new pcl::PointCloud<PointT>());
-      pcl::io::loadPCDFile(pcd_file_0_1, *globalmap_0_1);
-      globalmap_0_1->header.frame_id = "map";
-
-      globalmap_1_1.reset(new pcl::PointCloud<PointT>());
-      pcl::io::loadPCDFile(pcd_file_1_1, *globalmap_1_1);
-      globalmap_1_1->header.frame_id = "map";
-
-      globalmap_n1_1.reset(new pcl::PointCloud<PointT>());
-      pcl::io::loadPCDFile(pcd_file_n1_1, *globalmap_n1_1);
-      globalmap_n1_1->header.frame_id = "map";
-
-      globalmap_0_n1.reset(new pcl::PointCloud<PointT>());
-      pcl::io::loadPCDFile(pcd_file_0_n1, *globalmap_0_n1);
-      globalmap_0_n1->header.frame_id = "map";
-
-      globalmap_1_n1.reset(new pcl::PointCloud<PointT>());
-      pcl::io::loadPCDFile(pcd_file_1_n1, *globalmap_1_n1);
-      globalmap_1_n1->header.frame_id = "map";
-
-      globalmap_n1_n1.reset(new pcl::PointCloud<PointT>());
-      pcl::io::loadPCDFile(pcd_file_n1_n1, *globalmap_n1_n1);
-      globalmap_n1_n1->header.frame_id = "map";
- 
+        std::string pcd_file_0_0 = pcd_folder_path + pcd_same_part + std::to_string(i) + "_" + std::to_string(j) + ".pcd";
+        std::string pcd_file_1_0 = pcd_folder_path + pcd_same_part + std::to_string(i + 1) + "_" + std::to_string(j) + ".pcd";
+        std::string pcd_file_n1_0 = pcd_folder_path + pcd_same_part + std::to_string(i - 1) + "_" + std::to_string(j) + ".pcd";
+        std::string pcd_file_0_1 = pcd_folder_path + pcd_same_part + std::to_string(i) + "_" + std::to_string(j + 1) + ".pcd";
+        std::string pcd_file_1_1 = pcd_folder_path + pcd_same_part + std::to_string(i + 1) + "_" + std::to_string(j + 1) + ".pcd";
+        std::string pcd_file_n1_1 = pcd_folder_path + pcd_same_part + std::to_string(i - 1) + "_" + std::to_string(j + 1) + ".pcd";
+        std::string pcd_file_0_n1 = pcd_folder_path + pcd_same_part + std::to_string(i) + "_" + std::to_string(j - 1) + ".pcd";
+        std::string pcd_file_1_n1 = pcd_folder_path + pcd_same_part + std::to_string(i + 1) + "_" + std::to_string(j - 1) + ".pcd";
+        std::string pcd_file_n1_n1 = pcd_folder_path + pcd_same_part + std::to_string(i - 1) + "_" + std::to_string(j - 1) + ".pcd";
 
 
 
-      globalmap_output.reset(new pcl::PointCloud<PointT>());
-      *globalmap_output += *globalmap_0_0;
-      *globalmap_output += *globalmap_1_0;
-      *globalmap_output += *globalmap_n1_0;
-      *globalmap_output += *globalmap_0_1;
-      *globalmap_output += *globalmap_1_1;
-      *globalmap_output += *globalmap_n1_1;
-      *globalmap_output += *globalmap_0_n1;
-      *globalmap_output += *globalmap_1_n1;
-      *globalmap_output += *globalmap_n1_n1;
-      globalmap_output->header.frame_id = "map";
+
+        if (chunk_index_1 != chunk_index_1_previous && chunk_index_2 != chunk_index_2_previous){ // i and j ungleich
+
+          globalmap_0_0.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_0_0, *globalmap_0_0);
+          globalmap_0_0->header.frame_id = "map";
+
+          globalmap_1_0.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_1_0, *globalmap_1_0);
+          globalmap_1_0->header.frame_id = "map";
+
+          globalmap_n1_0.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_n1_0, *globalmap_n1_0);
+          globalmap_n1_0->header.frame_id = "map";
+
+          globalmap_0_1.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_0_1, *globalmap_0_1);
+          globalmap_0_1->header.frame_id = "map";
+
+          globalmap_1_1.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_1_1, *globalmap_1_1);
+          globalmap_1_1->header.frame_id = "map";
+
+          globalmap_n1_1.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_n1_1, *globalmap_n1_1);
+          globalmap_n1_1->header.frame_id = "map";
+
+          globalmap_0_n1.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_0_n1, *globalmap_0_n1);
+          globalmap_0_n1->header.frame_id = "map";
+
+          globalmap_1_n1.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_1_n1, *globalmap_1_n1);
+          globalmap_1_n1->header.frame_id = "map";
+
+          globalmap_n1_n1.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_n1_n1, *globalmap_n1_n1);
+          globalmap_n1_n1->header.frame_id = "map";
+
+          chunk_index_1_previous = chunk_index_1;
+          chunk_index_2_previous = chunk_index_2;
+        }
 
 
-      globalmap_pub.publish(globalmap_output);
+
+
+        if (chunk_index_1 != chunk_index_1_previous && chunk_index_2 == chunk_index_2_previous){ // i ungleich, j gleich
+          if (chunk_index_1 - chunk_index_1_previous == 1){ // 52
+            globalmap_n1_0 = globalmap_0_0;
+            globalmap_0_0 = globalmap_1_0;
+
+            globalmap_n1_1 = globalmap_0_1;
+            globalmap_0_1 = globalmap_1_1;
+
+            globalmap_n1_n1 = globalmap_0_n1;
+            globalmap_0_n1 = globalmap_1_n1;
+
+            globalmap_1_0.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_1_0, *globalmap_1_0);
+            globalmap_1_0->header.frame_id = "map";
+
+            globalmap_1_1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_1_1, *globalmap_1_1);
+            globalmap_1_1->header.frame_id = "map";
+
+            globalmap_1_n1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_1_n1, *globalmap_1_n1);
+            globalmap_1_n1->header.frame_id = "map";
+
+
+          }
+          if (chunk_index_1 - chunk_index_1_previous == -1){ // 32
+
+            globalmap_1_0 = globalmap_0_0;
+            globalmap_0_0 = globalmap_n1_0;
+
+            globalmap_1_1 = globalmap_0_1;
+            globalmap_0_1 = globalmap_n1_1;
+
+            globalmap_1_n1 = globalmap_0_n1;
+            globalmap_0_n1 = globalmap_n1_n1;
+
+            globalmap_n1_0.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_n1_0, *globalmap_n1_0);
+            globalmap_n1_0->header.frame_id = "map";
+
+            globalmap_n1_1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_n1_1, *globalmap_n1_1);
+            globalmap_n1_1->header.frame_id = "map";
+
+            globalmap_n1_n1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_n1_n1, *globalmap_n1_n1);
+            globalmap_n1_n1->header.frame_id = "map";
+          }
+
+          chunk_index_1_previous = chunk_index_1;
+          chunk_index_2_previous = chunk_index_2;
+        }
+
+        if (chunk_index_1 == chunk_index_1_previous && chunk_index_2 != chunk_index_2_previous){ // i gleich, j ungleich
+          if (chunk_index_2 - chunk_index_2_previous == 1){ // 43
+
+            globalmap_0_n1 = globalmap_0_0;
+            globalmap_0_0 = globalmap_0_1;
+
+            globalmap_1_n1 = globalmap_1_0;
+            globalmap_1_0 = globalmap_1_1;
+
+            globalmap_n1_n1 = globalmap_n1_0;
+            globalmap_n1_0 = globalmap_n1_1;
+
+            globalmap_0_1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_0_1, *globalmap_0_1);
+            globalmap_0_1->header.frame_id = "map";
+
+            globalmap_1_1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_1_1, *globalmap_1_1);
+            globalmap_1_1->header.frame_id = "map";
+
+            globalmap_n1_1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_n1_1, *globalmap_n1_1);
+            globalmap_n1_1->header.frame_id = "map";
+
+
+          }
+          if (chunk_index_2 - chunk_index_2_previous == -1){ // 41
+            globalmap_0_1 = globalmap_0_0;
+            globalmap_0_0 = globalmap_0_n1;
+
+            globalmap_1_1 = globalmap_1_0;
+            globalmap_1_0 = globalmap_1_n1;
+
+            globalmap_n1_1 = globalmap_n1_0;
+            globalmap_n1_0 = globalmap_n1_n1;
+
+            globalmap_0_n1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_0_n1, *globalmap_0_n1);
+            globalmap_0_n1->header.frame_id = "map";
+
+            globalmap_n1_n1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_n1_n1, *globalmap_n1_n1);
+            globalmap_n1_n1->header.frame_id = "map";
+
+            globalmap_1_n1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_1_n1, *globalmap_1_n1);
+            globalmap_1_n1->header.frame_id = "map";
+
+
+          }
+
+          chunk_index_1_previous = chunk_index_1;
+          chunk_index_2_previous = chunk_index_2;
+        }
+
+
+        globalmap_output.reset(new pcl::PointCloud<PointT>());
+        *globalmap_output += *globalmap_0_0;
+        *globalmap_output += *globalmap_1_0;
+        *globalmap_output += *globalmap_n1_0;
+        *globalmap_output += *globalmap_0_1;
+        *globalmap_output += *globalmap_1_1;
+        *globalmap_output += *globalmap_n1_1;
+        *globalmap_output += *globalmap_0_n1;
+        *globalmap_output += *globalmap_1_n1;
+        *globalmap_output += *globalmap_n1_n1;
+        globalmap_output->header.frame_id = "map";
+
+
+        globalmap_pub.publish(globalmap_output);
+
+        rate.sleep();
+
 //-----------------------------------------------------------------------------------
 
 
@@ -189,8 +319,8 @@ public:
 
 
 //      update_client.call(srv);                                           // Once across the bound of the submap, send out the srv.
-      ROS_INFO("Global map has been updated.");
-    }
+        ROS_INFO("Global map has been updated.");
+      } // if end
 
 
 
@@ -200,18 +330,26 @@ public:
 //    srv.request.chunk_index_1 = chunk_index_1; //area index
 //    srv.request.chunk_index_2 = chunk_index_2; //area index
 
-    std::cout << robot_location_x << std::endl;
-    std::cout << robot_location_y << std::endl;
-    std::cout << chunk_index_1 << std::endl;
-    std::cout << chunk_index_2 << std::endl;
+
+      std::cout << robot_location_x << std::endl;
+      std::cout << robot_location_y << std::endl;
+      std::cout << chunk_index_1 << std::endl;
+      std::cout << chunk_index_2 << std::endl;
 
 
 
-  }
+
+    } //while end
+
+
+  } // ListenAndPublish() end
+
+
+
 
 private:
   ros::NodeHandle n;
-  ros::Subscriber location_sub;
+//  ros::Subscriber location_sub;
 //  ros::ServiceClient update_client; //////////////////////////////////////////////7
 
   ros::Publisher globalmap_pub;
@@ -227,21 +365,21 @@ private:
   pcl::PointCloud<PointT>::Ptr globalmap_n1_n1;
 
 
-};
+}; //Class end
 
 //-----------------------------------------------------------------------------------
 
 int main(int argc, char** argv)
 {
 
-  std::string first_pcd_file_name = GetFileNames("/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files");
+  std::string first_pcd_file_name = GetFileNames(pcd_folder_path);
   std::cout << first_pcd_file_name << std::endl;
 
   first_pcd_file_name = first_pcd_file_name.substr(0, first_pcd_file_name.length() - 4);
   
-  std::string first_pcd_file_path_pcd = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/" + first_pcd_file_name + ".pcd";
+  std::string first_pcd_file_path_pcd = pcd_folder_path + first_pcd_file_name + ".pcd";
 
-  std::string first_pcd_file_path_txt = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/" + first_pcd_file_name + ".txt";
+  std::string first_pcd_file_path_txt = pcd_folder_path + first_pcd_file_name + ".txt";
   rename(first_pcd_file_path_pcd.c_str(), first_pcd_file_path_txt.c_str());
 
 
@@ -289,7 +427,7 @@ int main(int argc, char** argv)
 
   ros::init(argc, argv, "map_update_caller");
 
-  SubscribeAndPublish SAPObject; // Subscriber And Caller
+  ListenAndPublish LAPObject; // Listener And publisher
 
 
   //std::string path = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files";
@@ -299,7 +437,7 @@ int main(int argc, char** argv)
     //open hdl_map_update/pcd_files/splitted_pcd_files
 
 
-    ros::spin();
+//    ros::spin();
 
     return 0;
 
