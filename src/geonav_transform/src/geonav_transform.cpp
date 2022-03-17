@@ -325,10 +325,14 @@ void GeonavTransform::navOdomCallback(const sensor_msgs::NavSatFixConstPtr& msg)
   // For now the 'nav' frame is that same as the 'base_link' frame
   transform_utm2nav_.setOrigin(tf2::Vector3(utmX, utmY, 
 					  altitude));
-  transform_utm2nav_.setRotation(tf2::Quaternion(imu_.orientation.x,
-						 imu_.orientation.y,
-						 imu_.orientation.z,
-						 imu_.orientation.w));
+  tf2::Quaternion inv_imu, base_link_ori;
+  inv_imu.setRPY(0, 0, 3.14159);
+  base_link_ori = tf2::Quaternion(imu_.orientation.x,
+                                                 imu_.orientation.y,
+                                                 imu_.orientation.z,
+                                                 imu_.orientation.w) * inv_imu;
+  base_link_ori.normalize();
+  transform_utm2nav_.setRotation(base_link_ori);
   transform_utm2nav_inverse_=transform_utm2nav_.inverse();
 
   // Publish Nav/Base Odometry in UTM frame - note frames are set in ::run()

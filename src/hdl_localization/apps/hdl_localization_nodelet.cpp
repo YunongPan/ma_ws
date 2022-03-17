@@ -19,6 +19,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <sensor_msgs/NavSatFix.h>
 
 #include <pcl/filters/voxel_grid.h>
 
@@ -52,6 +53,8 @@ public:
 
     robot_odom_frame_id = private_nh.param<std::string>("robot_odom_frame_id", "robot_odom");
     odom_child_frame_id = private_nh.param<std::string>("odom_child_frame_id", "base_link");
+    base_link_gps_frame_id = private_nh.param<std::string>("base_link_gps_frame_id", "base_link_gps");
+    gps_topic = private_nh.param<std::string>("gps_topic", "geonav_odom");
 
     use_imu = private_nh.param<bool>("use_imu", true);
     invert_acc = private_nh.param<bool>("invert_acc", false);
@@ -63,10 +66,12 @@ public:
     points_sub = mt_nh.subscribe("/velodyne_points", 5, &HdlLocalizationNodelet::points_callback, this);
     globalmap_sub = nh.subscribe("/globalmap", 1, &HdlLocalizationNodelet::globalmap_callback, this);
     initialpose_sub = nh.subscribe("/initialpose", 8, &HdlLocalizationNodelet::initialpose_callback, this);
+    gps_sub = nh.subscribe(gps_topic, 1, &HdlLocalizationNodelet::gps_callback, this);
 
     pose_pub = nh.advertise<nav_msgs::Odometry>("/odom", 5, false);
     aligned_pub = nh.advertise<sensor_msgs::PointCloud2>("/aligned_points", 5, false);
     status_pub = nh.advertise<ScanMatchingStatus>("/status", 5, false);
+    initialpose_pub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1, false);
 
     // global localization
     use_global_localization = private_nh.param<bool>("use_global_localization", true);
@@ -79,6 +84,7 @@ public:
       query_global_localization_service = nh.serviceClient<hdl_global_localization::QueryGlobalLocalization>("/hdl_global_localization/query");
 
       relocalize_server = nh.advertiseService("/relocalize", &HdlLocalizationNodelet::relocalize, this);
+      set_gps_pos_server = nh.advertiseService("/set_gps_pos", &HdlLocalizationNodelet::set_gps_pos, this);
     }
   }
 
@@ -232,7 +238,7 @@ private:
         const auto& gyro = (*imu_iter)->angular_velocity;
         double acc_sign = invert_acc ? -1.0 : 1.0;
         double gyro_sign = invert_gyro ? -1.0 : 1.0;
-        pose_estimator->predict((*imu_iter)->header.stamp, acc_sign * Eigen::Vector3f(acc.x, acc.y, acc.z), gyro_sign * Eigen::Vector3f(gyro.x, gyro.y, gyro.z));
+        pose_estimator->predict((*imu_iter)->header.stamp, Eigen::Vector3f( acc.x, acc_sign * acc.y, acc_sign * acc.z), Eigen::Vector3f(gyro.x, gyro_sign * gyro.y, gyro_sign * gyro.z));
       }
       imu_data.erase(imu_data.begin(), imu_iter);
     }
@@ -347,6 +353,32 @@ private:
   }
 
   /**
+   * @brief set /initialpose depending on current GPS location
+   * @param
+   */
+  bool set_gps_pos(std_srvs::EmptyRequest& req, std_srvs::EmptyResponse& res) {
+    //check if gps info available
+    geometry_msgs::PoseWithCovarianceStamped msg;
+
+    geometry_msgs::TransformStamped transform_map_base_link_gps;
+    try {
+    transform_map_base_link_gps = tf_buffer.lookupTransform("map", base_link_gps_frame_id, ros::Time(0));
+    } catch (tf2::TransformException &ex) {
+      ROS_WARN("%s", ex.what());
+      ros::Duration(1.0).sleep();
+    }
+    
+    msg.pose.pose.position.x = transform_map_base_link_gps.transform.translation.x;
+    msg.pose.pose.position.y = transform_map_base_link_gps.transform.translation.y;
+    msg.pose.pose.orientation = transform_map_base_link_gps.transform.rotation;
+
+
+    initialpose_pub.publish(msg);
+
+    return true;
+  }
+
+  /**
    * @brief callback for initial pose input ("2D Pose Estimate" on rviz)
    * @param pose_msg
    */
@@ -363,6 +395,16 @@ private:
             Eigen::Quaternionf(q.w, q.x, q.y, q.z),
             private_nh.param<double>("cool_time_duration", 0.5))
     );
+  }
+
+  /**
+   * @brief callback for GPS value
+   * @param gps_msg
+   */
+  void gps_callback(const nav_msgs::OdometryConstPtr& gps_msg) {
+    current_gps_pose.header = gps_msg->header;
+    current_gps_pose.pose.pose.position = gps_msg->pose.pose.position;
+    current_gps_pose.pose.pose.orientation = gps_msg->pose.pose.orientation;
   }
 
   /**
@@ -494,6 +536,8 @@ private:
 
   std::string robot_odom_frame_id;
   std::string odom_child_frame_id;
+  std::string base_link_gps_frame_id;
+  std::string gps_topic;
 
   bool use_imu;
   bool invert_acc;
@@ -502,10 +546,12 @@ private:
   ros::Subscriber points_sub;
   ros::Subscriber globalmap_sub;
   ros::Subscriber initialpose_sub;
+  ros::Subscriber gps_sub;
 
   ros::Publisher pose_pub;
   ros::Publisher aligned_pub;
   ros::Publisher status_pub;
+  ros::Publisher initialpose_pub;
 
   tf2_ros::Buffer tf_buffer;
   tf2_ros::TransformListener tf_listener;
@@ -528,9 +574,11 @@ private:
   bool use_global_localization;
   std::atomic_bool relocalizing;
   std::unique_ptr<DeltaEstimater> delta_estimater;
+  nav_msgs::Odometry current_gps_pose;
 
   pcl::PointCloud<PointT>::ConstPtr last_scan;
   ros::ServiceServer relocalize_server;
+  ros::ServiceServer set_gps_pos_server;
   ros::ServiceClient set_global_map_service;
   ros::ServiceClient query_global_localization_service;
 };

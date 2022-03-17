@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+
+  <rosparam command="load" file="$(find hdl_localization)/params/gps_pose.yaml" />
+
+  <node pkg="robot_localization" type="navsat_transform_node" name="navsat_transform" clear_params="true" respawn="true">
+    <remap from="/odometry/filtered" to="/odom"/> 
+    <remap from="/gps/fix" to="/ublox_gps/fix"/> 
+    <!-- <remap from="/gps/fix" to="/ublox_driver/receiver_lla"/> -->
+
+  </node>
+
+</launch>
