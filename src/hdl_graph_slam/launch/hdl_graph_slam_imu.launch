@@ -7,11 +7,11 @@
   <arg name="enable_gps" default="false" />
   <arg name="enable_imu_acc" default="false" />
   <arg name="enable_imu_ori" default="false" />
-  <arg name="points_topic" default="/front/rslidar_points" />
+  <arg name="points_topic" default="/velodyne_points" />
   <arg name="imu_topic" default="/imu/data" />
 
   <!-- transformation between lidar and base_link -->
-  <node pkg="tf" type="static_transform_publisher" name="lidar2base_publisher" args="0 0 0 0 0 0 base_link rslidar_front_base_link 10" />
+  <node pkg="tf" type="static_transform_publisher" name="lidar2base_publisher" args="0 0 0 0 0 0 base_link velodyne 10" />
   <node pkg="tf" type="static_transform_publisher" name="state2base_publisher" args="0 0 0 0 0 0 odom world 10" />
 
   <!-- in case you use velodyne_driver, comment out the following line -->

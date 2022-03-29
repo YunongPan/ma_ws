@@ -15,8 +15,8 @@
 
 int chunk00_x_min_bound;
 int chunk00_y_min_bound;
-int chunk_index_1_previous = -2;
-int chunk_index_2_previous = -2;
+int chunk_index_1_previous = -1;
+int chunk_index_2_previous = -1;
 
 std::string pcd_folder_path = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/";
 std::string pcd_same_part = "map_1124_ascii_";
@@ -119,12 +119,12 @@ public:
       int chunk_index_2 = (robot_location_x - chunk00_x_min_bound)/30;
       int chunk_index_1 = (chunk00_y_min_bound - robot_location_y)/30 + 1; // Calculate the Label of the submap where the robot is currently located.
 
-      if (chunk_index_1 != chunk_index_1_previous || chunk_index_2 != chunk_index_2_previous){
-        chunk_index_1_previous = chunk_index_1;
-        chunk_index_2_previous = chunk_index_2;
+
+
 
 
 //-----------------------------------------------------------------------------------
+      if (chunk_index_1 != chunk_index_1_previous || chunk_index_2 != chunk_index_2_previous){ // i oder j ungleich
         int i = chunk_index_1;
         int j = chunk_index_2;
 
@@ -138,43 +138,161 @@ public:
         std::string pcd_file_1_n1 = pcd_folder_path + pcd_same_part + std::to_string(i + 1) + "_" + std::to_string(j - 1) + ".pcd";
         std::string pcd_file_n1_n1 = pcd_folder_path + pcd_same_part + std::to_string(i - 1) + "_" + std::to_string(j - 1) + ".pcd";
 
-        globalmap_0_0.reset(new pcl::PointCloud<PointT>());
-        pcl::io::loadPCDFile(pcd_file_0_0, *globalmap_0_0);
-        globalmap_0_0->header.frame_id = "map";
 
-        globalmap_1_0.reset(new pcl::PointCloud<PointT>());
-        pcl::io::loadPCDFile(pcd_file_1_0, *globalmap_1_0);
-        globalmap_1_0->header.frame_id = "map";
 
-        globalmap_n1_0.reset(new pcl::PointCloud<PointT>());
-        pcl::io::loadPCDFile(pcd_file_n1_0, *globalmap_n1_0);
-        globalmap_n1_0->header.frame_id = "map";
 
-        globalmap_0_1.reset(new pcl::PointCloud<PointT>());
-        pcl::io::loadPCDFile(pcd_file_0_1, *globalmap_0_1);
-        globalmap_0_1->header.frame_id = "map";
+        if (chunk_index_1 != chunk_index_1_previous && chunk_index_2 != chunk_index_2_previous){ // i and j ungleich
 
-        globalmap_1_1.reset(new pcl::PointCloud<PointT>());
-        pcl::io::loadPCDFile(pcd_file_1_1, *globalmap_1_1);
-        globalmap_1_1->header.frame_id = "map";
+          globalmap_0_0.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_0_0, *globalmap_0_0);
+          globalmap_0_0->header.frame_id = "map";
 
-        globalmap_n1_1.reset(new pcl::PointCloud<PointT>());
-        pcl::io::loadPCDFile(pcd_file_n1_1, *globalmap_n1_1);
-        globalmap_n1_1->header.frame_id = "map";
+          globalmap_1_0.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_1_0, *globalmap_1_0);
+          globalmap_1_0->header.frame_id = "map";
 
-        globalmap_0_n1.reset(new pcl::PointCloud<PointT>());
-        pcl::io::loadPCDFile(pcd_file_0_n1, *globalmap_0_n1);
-        globalmap_0_n1->header.frame_id = "map";
+          globalmap_n1_0.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_n1_0, *globalmap_n1_0);
+          globalmap_n1_0->header.frame_id = "map";
 
-        globalmap_1_n1.reset(new pcl::PointCloud<PointT>());
-        pcl::io::loadPCDFile(pcd_file_1_n1, *globalmap_1_n1);
-        globalmap_1_n1->header.frame_id = "map";
+          globalmap_0_1.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_0_1, *globalmap_0_1);
+          globalmap_0_1->header.frame_id = "map";
 
-        globalmap_n1_n1.reset(new pcl::PointCloud<PointT>());
-        pcl::io::loadPCDFile(pcd_file_n1_n1, *globalmap_n1_n1);
-        globalmap_n1_n1->header.frame_id = "map";
- 
+          globalmap_1_1.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_1_1, *globalmap_1_1);
+          globalmap_1_1->header.frame_id = "map";
 
+          globalmap_n1_1.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_n1_1, *globalmap_n1_1);
+          globalmap_n1_1->header.frame_id = "map";
+
+          globalmap_0_n1.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_0_n1, *globalmap_0_n1);
+          globalmap_0_n1->header.frame_id = "map";
+
+          globalmap_1_n1.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_1_n1, *globalmap_1_n1);
+          globalmap_1_n1->header.frame_id = "map";
+
+          globalmap_n1_n1.reset(new pcl::PointCloud<PointT>());
+          pcl::io::loadPCDFile(pcd_file_n1_n1, *globalmap_n1_n1);
+          globalmap_n1_n1->header.frame_id = "map";
+
+          chunk_index_1_previous = chunk_index_1;
+          chunk_index_2_previous = chunk_index_2;
+        }
+
+
+
+
+        if (chunk_index_1 != chunk_index_1_previous && chunk_index_2 == chunk_index_2_previous){ // i ungleich, j gleich
+          if (chunk_index_1 - chunk_index_1_previous == 1){ // 52
+            globalmap_n1_0 = globalmap_0_0;
+            globalmap_0_0 = globalmap_1_0;
+
+            globalmap_n1_1 = globalmap_0_1;
+            globalmap_0_1 = globalmap_1_1;
+
+            globalmap_n1_n1 = globalmap_0_n1;
+            globalmap_0_n1 = globalmap_1_n1;
+
+            globalmap_1_0.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_1_0, *globalmap_1_0);
+            globalmap_1_0->header.frame_id = "map";
+
+            globalmap_1_1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_1_1, *globalmap_1_1);
+            globalmap_1_1->header.frame_id = "map";
+
+            globalmap_1_n1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_1_n1, *globalmap_1_n1);
+            globalmap_1_n1->header.frame_id = "map";
+
+
+          }
+          if (chunk_index_1 - chunk_index_1_previous == -1){ // 32
+
+            globalmap_1_0 = globalmap_0_0;
+            globalmap_0_0 = globalmap_n1_0;
+
+            globalmap_1_1 = globalmap_0_1;
+            globalmap_0_1 = globalmap_n1_1;
+
+            globalmap_1_n1 = globalmap_0_n1;
+            globalmap_0_n1 = globalmap_n1_n1;
+
+            globalmap_n1_0.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_n1_0, *globalmap_n1_0);
+            globalmap_n1_0->header.frame_id = "map";
+
+            globalmap_n1_1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_n1_1, *globalmap_n1_1);
+            globalmap_n1_1->header.frame_id = "map";
+
+            globalmap_n1_n1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_n1_n1, *globalmap_n1_n1);
+            globalmap_n1_n1->header.frame_id = "map";
+          }
+
+          chunk_index_1_previous = chunk_index_1;
+          chunk_index_2_previous = chunk_index_2;
+        }
+
+        if (chunk_index_1 == chunk_index_1_previous && chunk_index_2 != chunk_index_2_previous){ // i gleich, j ungleich
+          if (chunk_index_2 - chunk_index_2_previous == 1){ // 43
+
+            globalmap_0_n1 = globalmap_0_0;
+            globalmap_0_0 = globalmap_0_1;
+
+            globalmap_1_n1 = globalmap_1_0;
+            globalmap_1_0 = globalmap_1_1;
+
+            globalmap_n1_n1 = globalmap_n1_0;
+            globalmap_n1_0 = globalmap_n1_1;
+
+            globalmap_0_1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_0_1, *globalmap_0_1);
+            globalmap_0_1->header.frame_id = "map";
+
+            globalmap_1_1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_1_1, *globalmap_1_1);
+            globalmap_1_1->header.frame_id = "map";
+
+            globalmap_n1_1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_n1_1, *globalmap_n1_1);
+            globalmap_n1_1->header.frame_id = "map";
+
+
+          }
+          if (chunk_index_2 - chunk_index_2_previous == -1){ // 41
+            globalmap_0_1 = globalmap_0_0;
+            globalmap_0_0 = globalmap_0_n1;
+
+            globalmap_1_1 = globalmap_1_0;
+            globalmap_1_0 = globalmap_1_n1;
+
+            globalmap_n1_1 = globalmap_n1_0;
+            globalmap_n1_0 = globalmap_n1_n1;
+
+            globalmap_0_n1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_0_n1, *globalmap_0_n1);
+            globalmap_0_n1->header.frame_id = "map";
+
+            globalmap_n1_n1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_n1_n1, *globalmap_n1_n1);
+            globalmap_n1_n1->header.frame_id = "map";
+
+            globalmap_1_n1.reset(new pcl::PointCloud<PointT>());
+            pcl::io::loadPCDFile(pcd_file_1_n1, *globalmap_1_n1);
+            globalmap_1_n1->header.frame_id = "map";
+
+
+          }
+
+          chunk_index_1_previous = chunk_index_1;
+          chunk_index_2_previous = chunk_index_2;
+        }
 
 
         globalmap_output.reset(new pcl::PointCloud<PointT>());

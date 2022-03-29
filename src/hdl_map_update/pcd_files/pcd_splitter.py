@@ -51,7 +51,7 @@ def header_modifier(file_name_txt, area_mat):
 
 
 if __name__ == '__main__':
-    original_file_pcd = "map_1124_ascii.pcd"
+    original_file_pcd = "tza_big_map.pcd"
     path = os.getcwd()
 
     ## Check if the original file is a .pcd file.
@@ -185,7 +185,7 @@ if __name__ == '__main__':
     #                orignial_file
     #                original_header =
 
-                    spiltted_pcd_file = open(path + "/splitted_pcd_files/" + spiltted_pcd_file_txt, "w")
+                    spiltted_pcd_file = open(path + "/splitted_pcd_files_2/" + spiltted_pcd_file_txt, "w")
                     modified_header = header_modifier(spiltted_pcd_file_txt, area_mat_points_num)
 
                     spiltted_pcd_file.write(modified_header) ## Should be modified after all the points be written.
@@ -195,7 +195,7 @@ if __name__ == '__main__':
                 if area_mat[-pos_y_area + max_y_area, pos_x_area - min_x_area] > 1:
                     spiltted_pcd_file_txt = original_file_name + "_" + str(-pos_y_area + max_y_area) + "_" + str(pos_x_area - min_x_area) + ".txt"
 
-                    spiltted_pcd_file = open(path + "/splitted_pcd_files/" + spiltted_pcd_file_txt, "a")
+                    spiltted_pcd_file = open(path + "/splitted_pcd_files_2/" + spiltted_pcd_file_txt, "a")
                     spiltted_pcd_file.write(line)
                     spiltted_pcd_file.close()
 
@@ -205,7 +205,7 @@ if __name__ == '__main__':
 
     print(area_mat)
 
-    splitted_pcd_files_path = path + "/splitted_pcd_files/"
+    splitted_pcd_files_path = path + "/splitted_pcd_files_2/"
     file_list = os.listdir(splitted_pcd_files_path)
     for file in file_list:
         portion = os.path.splitext(file)
