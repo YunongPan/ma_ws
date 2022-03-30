@@ -18,13 +18,17 @@ int chunk00_y_min_bound;
 int chunk_index_1_previous = -1;
 int chunk_index_2_previous = -1;
 
+std::string current_map = "-1_-1";
+
 std::string pcd_folder_path = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/";
 std::string pcd_same_part = "map_1124_ascii_";
+
+int delay_counter = 0;
 
 using PointT = pcl::PointXYZI;
 
 //-----------------------------------------------------------------------------------
-std::vector<std::string> spliter(std::string satz, const char* delim){ // split the name of the the name of the random pcd file. Ready to get the label number.
+std::vector<std::string> Spliter(std::string satz, const char* delim){ // split the name of the the name of the random pcd file. Ready to get the label number.
   const char* c_satz = satz.c_str();
   std::vector<std::string> s;
   char* token = strtok((char*)c_satz, delim);
@@ -63,7 +67,7 @@ std::string GetFileNames(std::string path) { // Read the name of the random pcd 
 
 
 //-----------------------------------------------------------------------------------
-std::string readTxt(std::string file) // Read line 11 of the random pcd file, which means the first point.
+std::string ReadTxt(std::string file) // Read line 11 of the random pcd file, which means the first point.
 {
   int i = 0;
   std::ifstream infile;
@@ -80,7 +84,34 @@ std::string readTxt(std::string file) // Read line 11 of the random pcd file, wh
   return line;
 }
 
+//-------------------------------------------------------------------------------------
+bool DelayChecker(std::string candidate_map)
+{
+  bool need_map_update;
 
+  if (current_map == candidate_map){
+    delay_counter = 0;
+ 
+  }
+  else {
+    delay_counter++;
+  }
+
+  std::cout << delay_counter << std::endl;
+
+  if (delay_counter == 3000){       // setable time for delay.
+    need_map_update = 1;
+    delay_counter = 0;
+  }
+  else {
+    need_map_update = 0;
+  }
+
+
+
+  return need_map_update;
+
+}
 
 //-----------------------------------------------------------------------------------
 class ListenAndPublish
@@ -119,9 +150,18 @@ public:
       int chunk_index_2 = (robot_location_x - chunk00_x_min_bound)/30;
       int chunk_index_1 = (chunk00_y_min_bound - robot_location_y)/30 + 1; // Calculate the Label of the submap where the robot is currently located.
 
+      std::string candidate_map = std::to_string(chunk_index_1) + "_" + std::to_string(chunk_index_2);
+
+      
+
+      
+      bool need_map_update = DelayChecker(candidate_map);
+//      bool need_map_update = 1;
 
 
-
+      if (need_map_update == 1){
+        // check which map need to be load according to candidate_map / chunk_index_1 & chunk_index_2, 
+        // check if there have same map.
 
 //-----------------------------------------------------------------------------------
       if (chunk_index_1 != chunk_index_1_previous || chunk_index_2 != chunk_index_2_previous){ // i oder j ungleich
@@ -312,7 +352,7 @@ public:
 
         rate.sleep();
 
-//-----------------------------------------------------------------------------------
+
 
 
 
@@ -321,6 +361,16 @@ public:
 //      update_client.call(srv);                                           // Once across the bound of the submap, send out the srv.
         ROS_INFO("Global map has been updated.");
       } // if end
+//-----------------------------------------------------------------------------------
+
+      current_map = candidate_map;
+      }
+
+
+
+
+
+
 
 
 
@@ -331,14 +381,17 @@ public:
 //    srv.request.chunk_index_2 = chunk_index_2; //area index
 
 
-      std::cout << robot_location_x << std::endl;
-      std::cout << robot_location_y << std::endl;
-      std::cout << chunk_index_1 << std::endl;
-      std::cout << chunk_index_2 << std::endl;
+
+//////////////////////////////////////////////////////////////////////
+//      std::cout << robot_location_x << std::endl;
+//      std::cout << robot_location_y << std::endl;
+//      std::cout << chunk_index_1 << std::endl;
+//      std::cout << chunk_index_2 << std::endl;
+//////////////////////////////////////////////////////////////////////
 
 
 
-
+    usleep(1000);
     } //while end
 
 
@@ -383,7 +436,7 @@ int main(int argc, char** argv)
   rename(first_pcd_file_path_pcd.c_str(), first_pcd_file_path_txt.c_str());
 
 
-  std::string ref_point = readTxt(first_pcd_file_path_txt); // Got the first point in random pcd file. Just find a random pcd and read the first point of the pcd.
+  std::string ref_point = ReadTxt(first_pcd_file_path_txt); // Got the first point in random pcd file. Just find a random pcd and read the first point of the pcd.
   std::cout << ref_point << std::endl;
 
   rename(first_pcd_file_path_txt.c_str(), first_pcd_file_path_pcd.c_str());
@@ -401,7 +454,7 @@ int main(int argc, char** argv)
   std::cout << ref_point_x << " " << ref_point_y << std::endl; // Get the referenz point position x and y.
 
 //--------------------------------------------------------------------------------------------  
-  std::vector<std::string> pcd_name_spl = spliter(first_pcd_file_name, "_");
+  std::vector<std::string> pcd_name_spl = Spliter(first_pcd_file_name, "_");
   int ref_chunk_index_1 = std::stoi(pcd_name_spl[pcd_name_spl.size() - 2]);
   int ref_chunk_index_2 = std::stoi(pcd_name_spl[pcd_name_spl.size() - 1]);
 
