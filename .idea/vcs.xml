@@ -2,5 +2,8 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/hdl_global_localization" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/hdl_graph_slam" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/hdl_localization" vcs="Git" />
   </component>
 </project>

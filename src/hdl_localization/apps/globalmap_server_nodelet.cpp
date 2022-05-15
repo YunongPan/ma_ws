@@ -20,7 +20,7 @@
 int chunk_index_1 = 4;
 int chunk_index_2 = 2; // When I turn on the robot, which chunk am I now?
 
-std::string pcd_folder_path = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/";
+std::string pcd_folder_path = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files_gazebo/";
 std::string pcd_same_part = "map_1124_ascii_";
 
 
@@ -62,7 +62,7 @@ private:
     int i = chunk_index_1;
     int j = chunk_index_2;
 
-    std::string pcd_file_0_0 = pcd_folder_path + pcd_same_part + std::to_string(i) + "_" + std::to_string(j) + ".pcd";
+    std::string pcd_file_0_0 = pcd_folder_path + pcd_same_part + "r_" + std::to_string(i) + "_" + std::to_string(j) + ".pcd";
     std::string pcd_file_1_0 = pcd_folder_path + pcd_same_part + std::to_string(i + 1) + "_" + std::to_string(j) + ".pcd";
     std::string pcd_file_n1_0 = pcd_folder_path + pcd_same_part + std::to_string(i - 1) + "_" + std::to_string(j) + ".pcd";
     std::string pcd_file_0_1 = pcd_folder_path + pcd_same_part + std::to_string(i) + "_" + std::to_string(j + 1) + ".pcd";
