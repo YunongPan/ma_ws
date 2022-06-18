@@ -1,5 +1,0 @@
-//caller先读取
-
-//新建一个自定义service，其中包含区域符信息，
-//接收小车位置topic，转化为区域符。
-//区域符改变后，发出（call）自定义service，map_update_server节点收到service后，重新发布latched /globalmap话题。

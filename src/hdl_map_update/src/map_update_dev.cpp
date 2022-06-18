@@ -23,9 +23,9 @@ int chunk_index_2_previous = -1;
 
 std::string current_map = "-1_-1";
 
-std::string pcd_folder_path = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files_gazebo/";
-std::string pcd_same_part = "map_1124_ascii_";
-std::string first_pcd_file_name = "map_1124_ascii_n_0_2.pcd";
+std::string pcd_folder_path = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/gazebo_pcd_files/";
+std::string pcd_same_part = "gazebo_map_all_220514_ascii_";
+std::string first_pcd_file_name = "gazebo_map_all_220514_ascii_2_4.pcd";
 int allowed_max_points = 2000000;
 
 int delay_counter = 0;

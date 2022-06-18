@@ -14,7 +14,7 @@
     <!--set to the original lla as melaten map origin-->
     <rosparam param="datum">[50.7871051, 6.046473, 265.117]</rosparam>
     <!--set to the simulation lla -->
-    <rosparam param="datum">[50.780210, 6.104765, 156]</rosparam>
+    <rosparam param="datum">[50.780579, 6.104186, 156]</rosparam>
   </node>
 
   <node pkg="tf" type="static_transform_publisher" name="map_2_map_gps" args="0 0 0 0 0 0 map map_gps 10" />

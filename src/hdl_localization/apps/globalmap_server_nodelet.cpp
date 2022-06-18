@@ -17,11 +17,11 @@
 
 
 
-int chunk_index_1 = 4;
-int chunk_index_2 = 2; // When I turn on the robot, which chunk am I now?
+int chunk_index_1 = 1;
+int chunk_index_2 = 1; // When I turn on the robot, which chunk am I now?
 
-std::string pcd_folder_path = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files_gazebo/";
-std::string pcd_same_part = "map_1124_ascii_";
+std::string pcd_folder_path = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/gazebo_pcd_files/";
+std::string pcd_same_part = "gazebo_map_all_220514_ascii_";
 
 
 
@@ -62,7 +62,9 @@ private:
     int i = chunk_index_1;
     int j = chunk_index_2;
 
-    std::string pcd_file_0_0 = pcd_folder_path + pcd_same_part + "r_" + std::to_string(i) + "_" + std::to_string(j) + ".pcd";
+    // std::string pcd_file_0_0 = pcd_folder_path + pcd_same_part + "r_" + std::to_string(i) + "_" + std::to_string(j) + ".pcd";
+
+    std::string pcd_file_0_0 = pcd_folder_path + pcd_same_part + std::to_string(i) + "_" + std::to_string(j) + ".pcd";
     std::string pcd_file_1_0 = pcd_folder_path + pcd_same_part + std::to_string(i + 1) + "_" + std::to_string(j) + ".pcd";
     std::string pcd_file_n1_0 = pcd_folder_path + pcd_same_part + std::to_string(i - 1) + "_" + std::to_string(j) + ".pcd";
     std::string pcd_file_0_1 = pcd_folder_path + pcd_same_part + std::to_string(i) + "_" + std::to_string(j + 1) + ".pcd";
@@ -71,6 +73,18 @@ private:
     std::string pcd_file_0_n1 = pcd_folder_path + pcd_same_part + std::to_string(i) + "_" + std::to_string(j - 1) + ".pcd";
     std::string pcd_file_1_n1 = pcd_folder_path + pcd_same_part + std::to_string(i + 1) + "_" + std::to_string(j - 1) + ".pcd";
     std::string pcd_file_n1_n1 = pcd_folder_path + pcd_same_part + std::to_string(i - 1) + "_" + std::to_string(j - 1) + ".pcd";
+
+//    std::string pcd_file_0_0 = pcd_folder_path + pcd_same_part + "1" + "_" + "7" + ".pcd";
+//    std::string pcd_file_1_0 = pcd_folder_path + pcd_same_part + "2" + "_" + "5" + ".pcd";
+//    std::string pcd_file_n1_0 = pcd_folder_path + pcd_same_part + "2" + "_" + "6" + ".pcd";
+//    std::string pcd_file_0_1 = pcd_folder_path + pcd_same_part + "2" + "_" + "7" + ".pcd";
+//    std::string pcd_file_1_1 = pcd_folder_path + pcd_same_part + "3" + "_" + "6" + ".pcd";
+//    std::string pcd_file_n1_1 = pcd_folder_path + pcd_same_part + "3" + "_" + "7" + ".pcd";
+//    std::string pcd_file_0_n1 = pcd_folder_path + pcd_same_part + "2" + "_" + "2" + ".pcd";
+//    std::string pcd_file_1_n1 = pcd_folder_path + pcd_same_part + "2" + "_" + "3" + ".pcd";
+//    std::string pcd_file_n1_n1 = pcd_folder_path + pcd_same_part + "2" + "_" + "4" + ".pcd";
+//    std::string pcd_file_extra = pcd_folder_path + pcd_same_part + "1" + "_" + "6" + ".pcd";
+
 
     globalmap_0_0.reset(new pcl::PointCloud<PointT>());
     pcl::io::loadPCDFile(pcd_file_0_0, *globalmap_0_0);
@@ -110,6 +124,12 @@ private:
 
 
 
+//    globalmap_extra.reset(new pcl::PointCloud<PointT>());
+//    pcl::io::loadPCDFile(pcd_file_extra, *globalmap_extra);
+//    globalmap_extra->header.frame_id = "map";
+
+
+
 
     globalmap_output.reset(new pcl::PointCloud<PointT>());
     *globalmap_output += *globalmap_0_0;
@@ -121,6 +141,9 @@ private:
     *globalmap_output += *globalmap_0_n1;
     *globalmap_output += *globalmap_1_n1;
     *globalmap_output += *globalmap_n1_n1;
+
+//    *globalmap_output += *globalmap_extra;
+
     globalmap_output->header.frame_id = "map";
   }
 
@@ -153,6 +176,9 @@ private:
   pcl::PointCloud<PointT>::Ptr globalmap_0_n1;
   pcl::PointCloud<PointT>::Ptr globalmap_1_n1;
   pcl::PointCloud<PointT>::Ptr globalmap_n1_n1;
+
+//  pcl::PointCloud<PointT>::Ptr globalmap_extra;
+
 
 
 };
