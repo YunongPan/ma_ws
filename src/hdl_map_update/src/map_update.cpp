@@ -10,17 +10,16 @@
 #include <tf/transform_listener.h>
 #include <experimental/filesystem>
 
-int chunk00_x_min_bound;
-int chunk00_y_min_bound;
+float chunk00_x_min_bound;
+float chunk00_y_min_bound;
 int chunk_index_1_previous = -1;
 int chunk_index_2_previous = -1;
 std::string current_map = "-1_-1";
 
-std::string pcd_folder_path = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/gazebo_pcd_files/";
-std::string pcd_same_part = "gazebo_map_all_220514_ascii_";
-std::string first_pcd_file_name = "gazebo_map_all_220514_ascii_2_4.pcd";
+std::string random_file = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/gazebo_map_all_220514_ascii_31.38_0_7.pcd";
+float hysteresis_time = 0; // [s]
 
-int delay_counter = 0;
+int delay_counter = -1;
 
 using PointT = pcl::PointXYZI;
 
@@ -37,6 +36,27 @@ std::vector<std::string> Spliter(std::string satz, const char* delim) { // split
     return s;
 
 }
+//-----------------------------------------------------------------------------------
+std::string CombinString(std::string start, int end, std::string fill, std::vector<std::string> s) {
+    std::string combined_string = start;
+    for (int i = 0; i < s.size() - end; i++) {
+        combined_string = combined_string + s[i] + fill;
+    }
+    return combined_string;
+
+}
+//-----------------------------------------------------------------------------------
+std::vector<std::string> random_file_spl = Spliter(random_file, "/");
+std::string first_pcd_file_name = random_file_spl[random_file_spl.size() - 1];
+
+std::string pcd_folder_path = CombinString("/", 1, "/", random_file_spl);
+
+std::vector<std::string> pcd_name_spl = Spliter(first_pcd_file_name, "_");
+std::string pcd_same_part = CombinString("", 2, "_", pcd_name_spl);
+
+float chunk_size = std::stoi(pcd_name_spl[pcd_name_spl.size() - 3]);
+float half_chunk_size = chunk_size/2.0;
+
 
 //-----------------------------------------------------------------------------------
 bool IsFileExist(const std::string& file_path) {
@@ -111,20 +131,30 @@ std::string ReadTxt(std::string file) { // Read line 11 of the random pcd file, 
 bool DelayChecker(std::string candidate_map) {
 
     bool need_map_update;
+    int count_down;
 
     if (current_map == candidate_map) {
-        delay_counter = 0;
-
+        delay_counter = -1;
     }
     else {
         delay_counter++;
     }
 
-    std::cout << delay_counter << std::endl;
 
-    if (delay_counter == 3000) {       // setable time for delay.
+    int hy_time = static_cast<int>(hysteresis_time);
+
+    if (delay_counter == -1) {
+        std::cout << "No map update required......" << std::endl;
+    }
+    else {
+        count_down = hy_time - delay_counter;
+        std::cout << "Map update will be triggered after " + std::to_string(count_down) + " seconds." << std::endl;
+    }
+
+    if (delay_counter == hy_time) {
         need_map_update = 1;
-        delay_counter = 0;
+        std::cout << "Updating map." << std::endl;
+        delay_counter = -1;
     }
     else {
         need_map_update = 0;
@@ -146,10 +176,7 @@ class ListenAndPublish {
 
         std::vector<pcl::PointCloud<PointT>> v4(9);
 
-
         globalmap_pub = n.advertise<sensor_msgs::PointCloud2>("/globalmap", 5, true);
-        ///    location_sub = n.subscribe("/base/odom", 10, &SubscribeAndPublish::locationCallback, this);
-
 
         tf::TransformListener listener;
 
@@ -169,8 +196,8 @@ class ListenAndPublish {
             float robot_location_y = transform.getOrigin().y();
 
 
-            int chunk_index_2 = (robot_location_x - chunk00_x_min_bound)/30;
-            int chunk_index_1 = (chunk00_y_min_bound - robot_location_y)/30 + 1; // Calculate the Label of the submap where the robot is currently located.
+            int chunk_index_2 = (robot_location_x - chunk00_x_min_bound)/chunk_size;
+            int chunk_index_1 = (chunk00_y_min_bound - robot_location_y)/chunk_size + 1; // Calculate the Label of the submap where the robot is currently located.
 
             std::string candidate_map = std::to_string(chunk_index_1) + "_" + std::to_string(chunk_index_2);
 
@@ -185,9 +212,6 @@ class ListenAndPublish {
                 int i = chunk_index_1;
                 int j = chunk_index_2;
 
-                std::cout << i << std::endl;
-                std::cout << j << std::endl;
-
                 std::string checked_pcd_file_r;
                 std::string checked_pcd_file_n;
                 std::vector<std::string> non_road_list_new;
@@ -199,13 +223,10 @@ class ListenAndPublish {
 
                         non_road_list_new.push_back(checked_pcd_file_n);
 
-
                     }
                 }
 
-
                 std::vector<int> to_delete_index = FindNoSame(v3, non_road_list_new);
-
 
                 for (int i = 0; i < to_delete_index.size(); i++) { // Set no more needed grid to 0 in v3, delete its pointcloud in v4.
                     v3[to_delete_index[i]] = "0";
@@ -213,9 +234,7 @@ class ListenAndPublish {
                     v4[to_delete_index[i]] = *temp_ptr;
                 }
 
-
                 std::vector<std::string> v3_new = AddNewGrid(v3, non_road_list_new); // Add new grid into v3, load its .pcd to v4
-
 
                 v3 = v3_new;
                 for (int i = 0; i < v3.size(); i++) {
@@ -230,11 +249,10 @@ class ListenAndPublish {
                             v4[i] = *temp_ptr;
                             v4[i].header.frame_id = "map";
 
-                            std::cout << v4[i].width << std::endl;  // print out how many points in loaded non road grids
+                            std::cout << "New chunk with " + std::to_string(v4[i].width) + " points." << std::endl;// print out how many points in loaded non road grids
                         }
                     }
                 }
-
 
                 globalmap_output.reset(new pcl::PointCloud<PointT>());
                 for (int i = 0; i < v4.size(); i++) {
@@ -242,23 +260,19 @@ class ListenAndPublish {
                 }
                 globalmap_output->header.frame_id = "map";
 
-
                 chunk_index_1_previous = chunk_index_1;
                 chunk_index_2_previous = chunk_index_2;
-
 
                 globalmap_pub.publish(globalmap_output);
                 rate.sleep();
 
-
                 current_map = candidate_map;
             }
 
-            usleep(1000);   // tf listener time interval: 1 ms.
+            usleep(1000000);   // tf listener time interval: 1 ms.
         } //while end
 
     } // ListenAndPublish() end
-
 
     private:
     ros::NodeHandle n;
@@ -274,8 +288,6 @@ class ListenAndPublish {
 
 int main(int argc, char** argv) {
 
-//    std::string first_pcd_file_name = GetFileNames(pcd_folder_path);
-    std::cout << first_pcd_file_name << std::endl;
 
     first_pcd_file_name = first_pcd_file_name.substr(0, first_pcd_file_name.length() - 4);
 
@@ -284,12 +296,9 @@ int main(int argc, char** argv) {
     std::string first_pcd_file_path_txt = pcd_folder_path + first_pcd_file_name + ".txt";
     rename(first_pcd_file_path_pcd.c_str(), first_pcd_file_path_txt.c_str());
 
-
     std::string ref_point = ReadTxt(first_pcd_file_path_txt); // Got the first point in random pcd file. Just find a random pcd and read the first point of the pcd.
 
-
     rename(first_pcd_file_path_txt.c_str(), first_pcd_file_path_pcd.c_str());
-
 
     std::string s = ref_point;
     std::stringstream ss(s);
@@ -300,13 +309,12 @@ int main(int argc, char** argv) {
     float ref_point_x = std::stof(vstrings[0]);
     float ref_point_y = std::stof(vstrings[1]);  // Get the referenz point position x and y.
 
-    std::vector<std::string> pcd_name_spl = Spliter(first_pcd_file_name, "_");
     int ref_chunk_index_1 = std::stoi(pcd_name_spl[pcd_name_spl.size() - 2]);
     int ref_chunk_index_2 = std::stoi(pcd_name_spl[pcd_name_spl.size() - 1]);
     // Just find a random pcd and read the first point of the pcd. Read the label of the filename. Count out the leftmost and lower bounds of the map.
 
-    chunk00_x_min_bound = floor((ref_point_x - 15)/30) * 30 + 15 - 30 * ref_chunk_index_2;
-    chunk00_y_min_bound = floor((ref_point_y - 15)/30) * 30 + 15 + 30 * ref_chunk_index_1;
+    chunk00_x_min_bound = floor((ref_point_x - half_chunk_size)/chunk_size) * chunk_size + half_chunk_size - chunk_size * ref_chunk_index_2;
+    chunk00_y_min_bound = floor((ref_point_y - half_chunk_size)/chunk_size) * chunk_size + half_chunk_size + chunk_size * ref_chunk_index_1;
 
 
 
