@@ -12,7 +12,7 @@
 
 //-----------------------------------------------------------------------------------
 // The parameters can be set here.
-// Pick a random file from folder /splitted_pcd_files and change here to the full path to this file.
+// Choose a random file from folder /ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files and change this parameter to the full path to this file.
 std::string random_file = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/gazebo_map_all_220514_ascii_31.38_0_7.pcd";
 // Hysteresis time.
 float hysteresis_time = 0; // [s]

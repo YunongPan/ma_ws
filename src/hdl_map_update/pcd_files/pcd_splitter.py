@@ -5,7 +5,7 @@ import numpy as np
 ########################################################################
 # Please edit the parameters here before starting rasterization
 original_file_pcd = "gazebo_map_all_220514_ascii.pcd"
-chunk_size = 31.38
+chunk_size = 31.38 #[m]
 ########################################################################
 
 # Read header from orignial PCD file.
