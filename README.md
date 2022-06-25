@@ -1,6 +1,7 @@
 # ma_ws
-Repository for MA RWTH
-
+Repository for MA RWTH. Compared with the original Repository, the differences are:
+1. Add hdl_map_update package.
+2. Modifiy the globalmap_server_nodelet.cpp in the hdl_localization/apps
 ## Installation
 1. `cd ~`
 2. `git clone https://github.com/YunongPan/ma_ws.git`
