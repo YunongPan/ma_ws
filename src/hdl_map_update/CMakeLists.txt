@@ -167,7 +167,7 @@ include_directories(
 
 add_executable(map_update src/map_update.cpp)
 target_link_libraries(map_update ${catkin_LIBRARIES})
-add_dependencies(map_update ${PROJECT_NAME}_gencpp)
+
 
 
 #############
