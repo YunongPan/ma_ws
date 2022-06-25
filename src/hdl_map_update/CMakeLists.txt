@@ -86,8 +86,7 @@ message(STATUS "PCL_DEFINITIONS:" ${PCL_DEFINITIONS})
 #   std_msgs
 # )
 
-add_service_files(FILES Chunk_index.srv)
-generate_messages(DEPENDENCIES std_msgs)
+
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -170,9 +169,6 @@ add_executable(map_update src/map_update.cpp)
 target_link_libraries(map_update ${catkin_LIBRARIES})
 add_dependencies(map_update ${PROJECT_NAME}_gencpp)
 
-add_executable(map_update_dev src/map_update_dev.cpp)
-target_link_libraries(map_update_dev ${catkin_LIBRARIES})
-add_dependencies(map_update_dev ${PROJECT_NAME}_gencpp)
 
 #############
 ## Install ##

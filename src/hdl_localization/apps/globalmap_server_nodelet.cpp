@@ -10,9 +10,14 @@
 #include <pluginlib/class_list_macros.h>
 #include <pcl/filters/voxel_grid.h>
 
+// In order to start hdl_localization, a global map must be loaded.
+// It doesn't matter what that global map looks like, since the global map will be updated when the map_update node is turned on.
 
+//-----------------------------------------------------------------------------------
+// The parameters can be set here.
+// Pick a random file from folder /splitted_pcd_files and change here to the full path to this file.
 std::string random_file = "/home/yunong/ma_ws/src/hdl_map_update/pcd_files/splitted_pcd_files/gazebo_map_all_220514_ascii_31.38_0_7.pcd";
-
+//-----------------------------------------------------------------------------------
 
 namespace hdl_localization {
 
@@ -39,7 +44,7 @@ namespace hdl_localization {
 
         private:
         void initialize_params() {
-            // read globalmap from the random pcd file
+            // read point cloud map from the random pcd file and set it as the initial globalmap.
             globalmap_output.reset(new pcl::PointCloud<PointT>());
             pcl::io::loadPCDFile(random_file, *globalmap_output);
             globalmap_output->header.frame_id = "map";
